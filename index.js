@@ -1,6 +1,7 @@
 const { IgApiClient } = require('instagram-private-api');
 const Discord = require('discord.js');
-const StateUtil = require("./util/StateUtil")
+const StateUtil = require("./util/StateUtil");
+const moment = require("moment");
 
 const discordClient = new Discord.Client();
 const ig = new IgApiClient();
@@ -45,11 +46,11 @@ async function getStory(targetUsername) {
         let type = item.video_versions ? "video" : "photo";
         stories.push({
             type,
+            takenAt: item.taken_at,
             photoUrl: item.image_versions2 ? item.image_versions2.candidates[0].url : null,
             videoUrl: item.video_versions ? item.video_versions[0].url : null
         })
     })
-    console.log("return stos: " + JSON.stringify(stories));
     return stories;
 };
 
@@ -62,16 +63,31 @@ discordClient.on('ready', () => {
 discordClient.on('message', msg => {
     if (msg.content === 'ping') {
         msg.reply('Pong!');
+        msg.reply({
+            embed: {
+                "description": "this supports [named links](https://discordapp.com) on top of the previously shown subset of markdown. ```\nyes, even code blocks```",
+                "color": 2194493,
+                "timestamp": "2020-10-13T15:29:14.949Z",
+              },
+            files: ['https://images-ext-2.discordapp.net/external/2dZVVL6feMSM7lxfFkKVW__LToSOzmToSEmocJV5vcA/https/cdn.discordapp.com/embed/avatars/0.png'],
+            
+        })
     }
     if (msg.content.startsWith("/feed-story")) {
         const splittedContents = msg.content.split(" ");
         if (splittedContents.length > 1 && splittedContents[1] !== "") {
             getStory(splittedContents[1]).then(stories => {
                 if (stories.length > 0) {
-                    msg.reply(stories[0].photoUrl);
-                    if (stories[0].type === "video") {
-                        msg.reply(stories[0].videoUrl);
-                    }
+                    stories.forEach(story => {
+                        const url = story.type === "video" ? story.videoUrl : story.photoUrl;
+                        msg.channel.send({
+                            embed: {
+                                "color": 2194493,
+                                "description": moment.unix(story.takenAt).format("LLL"),
+                              },
+                            files: [url],
+                        })
+                    })
                 } else {
                     msg.reply("No stories :weary: ")
                 }
