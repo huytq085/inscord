@@ -68,30 +68,34 @@ discordClient.on('message', msg => {
                 "description": "this supports [named links](https://discordapp.com) on top of the previously shown subset of markdown. ```\nyes, even code blocks```",
                 "color": 2194493,
                 "timestamp": "2020-10-13T15:29:14.949Z",
-              },
+            },
             files: ['https://images-ext-2.discordapp.net/external/2dZVVL6feMSM7lxfFkKVW__LToSOzmToSEmocJV5vcA/https/cdn.discordapp.com/embed/avatars/0.png'],
-            
+
         })
     }
     if (msg.content.startsWith("/feed-story")) {
         const splittedContents = msg.content.split(" ");
         if (splittedContents.length > 1 && splittedContents[1] !== "") {
-            getStory(splittedContents[1]).then(stories => {
-                if (stories.length > 0) {
-                    stories.forEach(story => {
-                        const url = story.type === "video" ? story.videoUrl : story.photoUrl;
-                        msg.channel.send({
-                            embed: {
-                                "color": 2194493,
-                                "description": moment.unix(story.takenAt).format("LLL"),
-                              },
-                            files: [url],
+            getStory(splittedContents[1])
+                .then(stories => {
+                    if (stories.length > 0) {
+                        stories.forEach(story => {
+                            const url = story.type === "video" ? story.videoUrl : story.photoUrl;
+                            msg.channel.send({
+                                embed: {
+                                    "color": 2194493,
+                                    "description": moment.unix(story.takenAt).format("LLL"),
+                                },
+                                files: [url],
+                            })
                         })
-                    })
-                } else {
-                    msg.reply("No stories :weary: ")
-                }
-            })
+                    } else {
+                        msg.reply("No stories :weary: ")
+                    }
+                })
+                .catch(err => {
+                    msg.reply(err.message + " :thermometer_face:");
+                })
         }
     }
 });
