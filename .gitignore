@@ -65,5 +65,5 @@ dist
 .vscode/
 
 # session state file
-state-storage/
+storage/
 app-state.json

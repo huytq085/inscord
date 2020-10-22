@@ -5,13 +5,14 @@ const moment = require("moment");
 const Constants = require("./util/Constants");
 const SortUtil = require("./util/SortUtil");
 const MessageUtil = require("./util/MessageUtil");
+const Logger = require("./util/Logger");
 
 const discordClient = new Discord.Client();
 const ig = new IgApiClient();
 require('dotenv').config();
 
 discordClient.on('ready', () => {
-    console.log(`Logged in as ${discordClient.user.tag}!`);
+    Logger.info(`Logged in as ${discordClient.user.tag}!`);
     login(process.env.USER_NAME, process.env.PASSWORD);
 });
 
@@ -31,12 +32,12 @@ discordClient.on('message', msg => {
 discordClient.login(process.env.DISCORD_BOT_TOKEN);
 
 async function login(userName, password) {
-    console.log('Login as ' + userName);
+    Logger.info('Login as ' + userName);
     ig.state.generateDevice(userName);
     try {
         let auth;
         if (StateUtil.isExists(userName) && typeof password === "undefined") {
-            console.log('Exists');
+            Logger.info('Exist state');
             const data = StateUtil.load(userName);
             await ig.state.deserialize(data);
             auth = await ig.user.info(ig.state.cookieUserId);
@@ -46,16 +47,15 @@ async function login(userName, password) {
                 MessageUtil.send(discordClient, message, Constants.Color.ERROR);
                 return;
             }
-            console.log('Not Exists');
+            Logger.info('Not Exist state');
             await ig.account.logout();
             auth = await ig.account.login(userName, password);
         }
         const serialized = await ig.state.serialize();
-        // delete serialized.constants;
         StateUtil.save(userName, serialized);
         welcomeLogin(auth);
     } catch (e) {
-        console.log(e);
+        Logger.error(e);
         StateUtil.delete(userName);
     }
 }
@@ -109,22 +109,22 @@ function handleFeedStory(msg) {
                     }
                 })
                 .catch(err => {
+                    Logger.error(err);
                     msg.reply(err.message + " :thermometer_face:");
                 })
         })
-
     }
 }
 
 async function getStory(user) {
-    console.log("Get Story");
+    Logger.info("Get Story");
     const stories = [];
     const reelsFeed = ig.feed.reelsMedia({ // working with reels media feed (stories feed)
         userIds: [user.pk], // you can specify multiple user id's, "pk" param is user id
     });
     const storyItems = await reelsFeed.items(); // getting reels, see "account-followers.feed.example.ts" if you want to know how to work with feeds
     if (storyItems.length === 0) {// we can check items length and find out if the user does have any story to watch
-        console.log(`${user.username}'s story is empty`);
+        Logger.info(`${user.username}'s story is empty`);
         return stories;
     }
     storyItems.forEach(item => {

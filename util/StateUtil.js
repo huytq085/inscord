@@ -1,6 +1,6 @@
 const fs = require("fs");
 
-const stateFolder = "state-storage"
+const stateFolder = "storage/state"
 const saveFilePath = "app-state.json";
 
 exports.save = (userName, data) => {
