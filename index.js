@@ -4,6 +4,7 @@ const StateUtil = require("./util/StateUtil");
 const moment = require("moment");
 const Constants = require("./util/Constants");
 const SortUtil = require("./util/SortUtil");
+const MessageUtil = require("./util/MessageUtil");
 
 const discordClient = new Discord.Client();
 const ig = new IgApiClient();
@@ -18,47 +19,33 @@ discordClient.on('message', msg => {
     if (msg.content === 'ping') {
         msg.reply('Pong!');
     }
-    if (msg.content.startsWith(Constants.command.LOGIN)) {
+    if (msg.content.startsWith(Constants.Command.LOGIN)) {
         handleLogin(msg);
-    } else if (msg.content.startsWith(Constants.command.CURRENT_USER)) {
+    } else if (msg.content.startsWith(Constants.Command.CURRENT_USER)) {
         handleCurrentUser();
-    } else if (msg.content.startsWith(Constants.command.FEED_STORY)) {
+    } else if (msg.content.startsWith(Constants.Command.FEED_STORY)) {
         handleFeedStory(msg);
     }
 });
 
 discordClient.login(process.env.DISCORD_BOT_TOKEN);
 
-function welcomeLogin(auth) {
-    discordClient.channels.cache.get(process.env.DISCORD_CHANNEL_ID_INSCORD).send({
-        embed: {
-            "title": "Welcome, @" + auth.username,
-            "color": 8311585
-        },
-    })
-}
-
-async function handleCurrentUser() {
-    const currentUser = await ig.account.currentUser();
-    discordClient.channels.cache.get(process.env.DISCORD_CHANNEL_ID_INSCORD).send({
-        embed: {
-            "title": "Current user: @" + currentUser.username,
-            "color": 10197915
-        },
-    })
-}
-
 async function login(userName, password) {
     console.log('Login as ' + userName);
     ig.state.generateDevice(userName);
     try {
         let auth;
-        if (StateUtil.isExists(userName)) {
+        if (StateUtil.isExists(userName) && typeof password === "undefined") {
             console.log('Exists');
             const data = StateUtil.load(userName);
             await ig.state.deserialize(data);
             auth = await ig.user.info(ig.state.cookieUserId);
         } else {
+            if (typeof password === "undefined") {
+                const message = userName + " is not exists. Please provide password.";
+                MessageUtil.send(discordClient, message, Constants.Color.ERROR);
+                return;
+            }
             console.log('Not Exists');
             await ig.account.logout();
             auth = await ig.account.login(userName, password);
@@ -75,14 +62,23 @@ async function login(userName, password) {
 
 function handleLogin(msg) {
     const splittedContents = msg.content.split(" ");
-    if (splittedContents.length < 3) {
-        msg.reply('Syntax error! Use this format: ```/login username password```');
+    if (splittedContents.length < 2 || splittedContents.length > 3) {
+        let message = 'Syntax error!'
+        message += '\nCommand for login: ```/login username password```'
+        message += '\nIf you want to login into the existing user: ```/login username```'
+        MessageUtil.send(discordClient, message, Constants.Color.ERROR);
         return;
     }
     const userName = splittedContents[1];
     const password = splittedContents[2];
     login(userName, password);
+}
 
+function handleCurrentUser() {
+    ig.account.currentUser().then(currentUser => {
+        const message = "Current user: @" + currentUser.username;
+        MessageUtil.send(discordClient, message, Constants.Color.INFO);
+    })
 }
 
 function handleFeedStory(msg) {
@@ -142,3 +138,8 @@ async function getStory(user) {
     })
     return stories;
 };
+
+function welcomeLogin(auth) {
+    const message = "Welcome, @" + auth.username;
+    MessageUtil.send(discordClient, message, Constants.Color.SUCCESS);
+}

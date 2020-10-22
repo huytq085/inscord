@@ -18,7 +18,6 @@ compare = (property) => {
 
 compareByTime = (property) => {
     return (a, b) => {
-        // Use toUpperCase() to ignore character casing
         const pA = Date.parse(a[property]);
         const pB = Date.parse(b[property]);
 
