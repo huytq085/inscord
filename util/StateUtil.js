@@ -4,6 +4,9 @@ const stateFolder = "state-storage"
 const saveFilePath = "app-state.json";
 
 exports.save = (userName, data) => {
+    if (!fs.existsSync(stateFolder)) {
+        fs.mkdirSync(stateFolder);
+    }
     fs.writeFileSync(`${stateFolder}/${userName}-${saveFilePath}`, JSON.stringify(data));
 }
 
