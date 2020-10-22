@@ -3,6 +3,7 @@ const Discord = require('discord.js');
 const StateUtil = require("./util/StateUtil");
 const moment = require("moment");
 const Constants = require("./util/Constants");
+const SortUtil = require("./util/SortUtil");
 
 const discordClient = new Discord.Client();
 const ig = new IgApiClient();
@@ -91,6 +92,7 @@ function handleFeedStory(msg) {
             getStory(user)
                 .then(stories => {
                     if (stories.length > 0) {
+                        SortUtil.sortByTime(stories, "takenAt");
                         stories.forEach(story => {
                             const url = story.type === "video" ? story.videoUrl : story.photoUrl;
                             discordClient.channels.cache.get(process.env.DISCORD_CHANNEL_ID_INSCORD).send({
