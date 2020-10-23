@@ -32,12 +32,18 @@ compareByTime = (property) => {
 
 }
 
+compareByNumber = (property) => {
+    return (a, b) => {
+        return a[property] - b[property];
+    }
+}
+
 exports.sort = (data, property) => {
     return data.sort(compare(property));
 }
 
-exports.sortByTime = (data, property) => {
-    return data.sort(compareByTime(property));
+exports.sortByUnixTime = (data, property) => {
+    return data.sort(compareByNumber(property));
 }
 
 exports.sortLocale = (data, property) => {

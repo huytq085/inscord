@@ -1,8 +1,9 @@
 exports.Command = {
-    FEED_STORY: "/feed-story",
     LOGIN: "/login",
     LOGOUT: "/logout",
     CURRENT_USER: "/current-user",
+    FEED_STORY: "/feed-story",
+    FEED_POST: "/feed-post",
 }
 
 exports.Color = {
